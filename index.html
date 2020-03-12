@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <style>
+    .Grid {
+      border: 2px solid black;
+      height: 400px;
+      width: 400px;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .Column {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .Cell {
+      flex: 1;
+      border: 1px solid black;
+      text-align: center;
+      font-size: 2em;
+    }
+
+  </style>
+</head>
+<body>
+  <main>
+    <div id="grid"></div>
+    <div class="controls">
+      <button type="button" class="move" id="btnMove">
+        Move
+      </button>
+      <button type="button" class="turn--right" id="btnTurnRight">
+        Turn Right
+      </button>
+    </div>
+  </main>
+  <script src="./index.js"></script>
+</body>
+</html>
