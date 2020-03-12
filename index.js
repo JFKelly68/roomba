@@ -8,37 +8,40 @@
 // Roomba
   // turn
   // move
-
-
 class Roomba {
+
+  static get directionsDelta () {
+    return {
+      'N': [0, -1],
+      'E': [1, 0],
+      'S': [0, 1],
+      'W': [-1, 0]
+    }
+  }
+  
+  static get directions () {
+    return ['E', 'S', 'W', 'N'];
+  }
+
   constructor () {
-    this._directions = ['N', 'E', 'S', 'W'];
     this._count = 0;
     
-    this.direction = this._directions[this._count];
     this.x = 0;
     this.y = 0;
   }
 
-  turn () {
-    // update direction
-    this._count = (this._count + 1) % this._directions.length;
-    const newDirection = this._directions[this._count]
-    this.direction = newDirection;
+  get direction () {
+    return Roomba.directions[this._count];
   }
 
-  move () {
-    // determine direction
-    switch (this.direction) {
-      case 'N':
-        this.y = this.y - 1;
-      case 'E': 
-        this.x = this.x + 1;
-      case 'S': 
-        this.y = this.y + 1;
-      case 'W': 
-        this.x = this.x - 1;
-    }
+  set direction (val) {
+    throw new Error(`'direction' is read-only`);
+  }
+
+  turn () {
+    // update direction by incrementing the count
+    const count = this._count + 1;
+    this._count = (count) % this.constructor.directions.length; // cycle the count
   }
 }
 
@@ -62,25 +65,43 @@ class Grid {
     this.element = document.querySelector('#grid');
     this.grid = this.createGrid(_size);
     this.size = _size;
+    this.activeCell = null
   }
 
   createGrid (size) {
     const grid = [];
-    for (let row = 0; row < size; row++) {
-      grid[row] = [];
-      const rowEl = this.constructor.createElement(['Column', `Column--${row}`]); // to match the provided HTML/CSS
-      this.element.appendChild(rowEl);
+    for (let col = 0; col < size; col++) {
+      grid[col] = [];
+      const colEl = this.constructor.createElement(['Column', `Column--${col}`]); // to match the provided HTML/CSS
+      this.element.appendChild(colEl);
 
-      for (let col = 0; col < size; col++) {
-        grid[row][col] = true;
-        const cell = this.constructor.createElement(['Cell', `Cell--${row}_${col}`]);
-        rowEl.appendChild(cell);
+      for (let cell = 0; cell < size; cell++) {
+        grid[col][cell] = true;
+        const cellEl = this.constructor.createElement(['Cell', `Cell--${col}_${cell}`]);
+        colEl.appendChild(cellEl);
       }
     }
 
     return grid;
   }
   
+  activateCell (x, y) {
+    if (this.activeCell !== null) {
+      this.deactivateCell();
+    }
+    
+    const cellEl = this.element.querySelector(`.Cell--${x}_${y}`);
+    if (cellEl) {
+      cellEl.classList.add('active');
+      this.activeCell = cellEl;
+    }
+  }
+
+  deactivateCell (cell = null) {
+    const active = cell || this.activeCell;
+
+    active.classList.remove('active');
+  }
 
 }
 
@@ -94,30 +115,80 @@ class Grid {
 class App {
   constructor () {
     this.grid;
-
-    this.x = 0;
-    this.y = 0;
-
+    this.x;
+    this.y;
+    this.btnMove;
+    this.btnTurn;
+    this.warningEl;
+    
     this.initialize();
+    this.setupListeners();
   }
 
   initialize () {
-    // setup listeners
     this.grid = new Grid(10);
+    this.roomba = new Roomba();
+    this.x = 0;
+    this.y = 0;
+    
+    // elements
+    this.btnMove = document.querySelector('#btnMove');
+    this.btnTurn = document.querySelector('#btnTurnRight');
+    this.warningEl = document.querySelector('#warning');
+
+    this._updatePosition([this.x, this.y]);
   }
 
   setupListeners () {
     // grab buttons, attach listeners
+    this.move = this.move.bind(this);
+    this.turn = this.turn.bind(this);
+
+    this.btnMove.addEventListener('click', this.move);
+    this.btnTurn.addEventListener('click', this.turn);
+  }
+
+  _calculateNewPosition (dir) {
+    const [dx, dy] = Roomba.directionsDelta[dir];
+    return [this.x + dx, this.y + dy];
+  }
+
+  isValid ([ x, y ]) {
+    return (
+      (x >= 0 && x < this.grid.size) &&
+      (y >= 0 && y < this.grid.size)
+    )
+  }
+
+  invalidMove () {
+    this.warningEl.classList.add('show');
+    
+    return setTimeout(() => {
+      this.warningEl.classList.remove('show');
+    }, 3000);
+  }
+
+  _updatePosition ([x, y]) {
+    if (!this.isValid([x, y])) {
+      return this.invalidMove();
+    }
+
+    this.x = x;
+    this.y = y;
+    this.grid.activateCell(x, y);
   }
 
   move () {
     // check roomba for direction
-    // if position is moving off the board, turn() // this.move()
+    const direction = this.roomba.direction;
+    // calculate next move
+    const nextPos = this._calculateNewPosition(direction);
     // update position
+    this._updatePosition(nextPos);
   }
 
   turn () {
-    // this.roomba.turn();
+    this.roomba.turn();
   }
 }
 
