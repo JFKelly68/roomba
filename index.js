@@ -40,32 +40,14 @@ class Roomba {
         this.x = this.x - 1;
     }
   }
-
-
 }
 
-// Cell
-
 // Grid
-  // cells
-
 class Grid {
-  
-  static createRow (row, size) {
-    // create element
-    const newEl = document.createElement('div');
-    newEl.classList.add(`Row`, `Row__${row}`);
-    
-    for (let i = 0; i < size; i++) {
-      const cell = this.createCell(i);
-      newEl.appendChild(cell);
-    }
-    return newEl;
-  }
 
-  static createCell (num) {
+  static createElement (classes) {
     const newEl = document.createElement('div');
-    newEl.classList.add(`Cell`, `Cell__${num}`);
+    newEl.classList.add(...classes);
     return newEl;
   }
 
@@ -74,29 +56,32 @@ class Grid {
     try {
       _size = parseInt(size);
     } catch (e) {
-      console.error('Size must be an integer');
+      throw new Error('Size must be an integer');
     }
 
     this.element = document.querySelector('#grid');
+    this.grid = this.createGrid(_size);
     this.size = _size;
-    this.grid = [];
-
-    this.initialize();
   }
 
-  initialize () {
-    this.createGrid();
-  }
-
-  createGrid () {
-    const size = this.size;
-
+  createGrid (size) {
+    const grid = [];
     for (let row = 0; row < size; row++) {
-      this.grid.push(Array(size));
-      const rowEl = this.constructor.createRow(row, size);
+      grid[row] = [];
+      const rowEl = this.constructor.createElement(['Column', `Column--${row}`]); // to match the provided HTML/CSS
       this.element.appendChild(rowEl);
+
+      for (let col = 0; col < size; col++) {
+        grid[row][col] = true;
+        const cell = this.constructor.createElement(['Cell', `Cell--${row}_${col}`]);
+        rowEl.appendChild(cell);
+      }
     }
+
+    return grid;
   }
+  
+
 }
 
 
@@ -119,8 +104,6 @@ class App {
   initialize () {
     // setup listeners
     this.grid = new Grid(10);
-
-
   }
 
   setupListeners () {
@@ -134,7 +117,7 @@ class App {
   }
 
   turn () {
-    this.roomba.turn();
+    // this.roomba.turn();
   }
 }
 
